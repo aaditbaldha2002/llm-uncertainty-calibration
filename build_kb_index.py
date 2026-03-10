@@ -20,7 +20,7 @@ index = faiss.IndexFlatIP(dimension)  # Inner product = cosine similarity
 index.add(embeddings)
 
 # Save index and texts for later
-faiss.write_index(index, "kb_index.faiss")
-kb_df.to_pickle("kb_texts.pkl")
+faiss.write_index(index, "vector_db/kb_index.faiss")
+kb_df.to_pickle("vector_db/kb_texts.pkl")
 
 print(f"FAISS index created with {len(texts)} entries.")
