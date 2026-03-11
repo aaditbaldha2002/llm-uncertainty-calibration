@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "LLM Hallucination Detector",
+  "version": "1.0",
+  "description": "Evaluate LLM answers for hallucinations.",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
