@@ -19,11 +19,11 @@ def retrieve_evidence(query, top_k=20):
     query_embedding = model.encode([query], convert_to_numpy=True)
     query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)
 
-    distances, indices = index.search(query_embedding, top_k)
+    scores, indices = index.search(query_embedding, top_k)
 
     evidence = [texts[i] for i in indices[0]]
 
-    return evidence, distances[0]
+    return evidence, scores[0]
 
 
 def hallucination_score(llm_answer, evidence_texts):
