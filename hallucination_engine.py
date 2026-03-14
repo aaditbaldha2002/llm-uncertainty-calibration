@@ -28,19 +28,21 @@ def retrieve_evidence(query, top_k=20):
 
 def hallucination_score(llm_answer, evidence_texts):
 
+    # Encode answer
     answer_embedding = model.encode([llm_answer], convert_to_numpy=True)
     answer_embedding = answer_embedding / np.linalg.norm(answer_embedding, axis=1, keepdims=True)
 
-    scores = []
+    # Encode all evidence at once
+    evidence_embeddings = model.encode(evidence_texts, convert_to_numpy=True)
+    evidence_embeddings = evidence_embeddings / np.linalg.norm(evidence_embeddings, axis=1, keepdims=True)
 
-    for text in evidence_texts:
+    # Compute cosine similarities (vectorized)
+    similarities = np.dot(evidence_embeddings, answer_embedding.T).flatten()
 
-        text_emb = model.encode([text], convert_to_numpy=True)
-        text_emb = text_emb / np.linalg.norm(text_emb, axis=1, keepdims=True)
+    # Improved scoring logic
+    max_similarity = np.max(similarities)
+    mean_similarity = np.mean(similarities)
 
-        similarity = np.dot(answer_embedding, text_emb.T)[0][0]
-        scores.append(similarity)
+    confidence = float(0.7 * max_similarity + 0.3 * mean_similarity)
 
-    confidence = float(np.mean(scores))
-
-    return confidence
+    return confidence, similarities
