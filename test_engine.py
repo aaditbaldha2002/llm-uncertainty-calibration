@@ -1,21 +1,15 @@
-from hallucination_engine import retrieve_evidence, hallucination_score, get_top_evidence
+from hallucination_engine import retrieve_and_rank
 
 # Take user inputs
 question = input("Enter question: ")
 llm_answer = input("Paste LLM answer: ")
 
-# Retrieve evidence and raw similarity scores
-evidence, _ = retrieve_evidence(question, top_k=20)
-
-# Compute hallucination confidence and similarities
-confidence, similarities = hallucination_score(llm_answer, evidence)
-
-# Get top 3 supporting evidence
-top_evidence = get_top_evidence(evidence, similarities, k=3)
+# Retrieve and rank evidence, get confidence
+top_evidence, top_scores, confidence = retrieve_and_rank(question, llm_answer, top_k=20)
 
 # Display top evidence
 print("\nTop Evidence:")
-for i, (text, score) in enumerate(top_evidence, start=1):
+for i, (text, score) in enumerate(zip(top_evidence, top_scores), start=1):
     print(f"\nEvidence {i} (Score: {round(score, 3)}):")
     print(text[:400])  # Preview first 400 chars
 
