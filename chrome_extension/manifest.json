@@ -1,10 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "LLM Hallucination Detector",
+  "name": "TruthLens",
   "version": "1.0",
-  "description": "Evaluate LLM answers for hallucinations.",
-  "permissions": ["activeTab"],
+  "description": "Short description here",
+  "permissions": ["activeTab", "storage"],
   "action": {
-    "default_popup": "popup.html"
-  }
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }
