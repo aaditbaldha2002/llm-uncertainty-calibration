@@ -1,20 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "TruthLens",
+  "name": "QueryMate",
   "version": "1.0",
-  "description": "Short description here",
-  "permissions": ["activeTab", "storage"],
+  "description": "LLM Hallucination Checker - Evaluate the reliability of AI-generated answers.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_popup": "popup.html"
   },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
-    }
-  ]
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
