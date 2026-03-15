@@ -29,16 +29,19 @@ document.getElementById("check").onclick = async function() {
         const data = await response.json();
 
         // Build output
-        let output = `✅ Confidence Score: ${data.confidence.toFixed(2)}\n\n`;
+        let output = `Final Confidence Score: ${data.confidence.toFixed(2)}\n\n`;
 
-        output += "🔹 Per-Claim Scores:\n";
+        output += "Per-Claim Scores & HF Verdicts:\n";
         data.claims.forEach((claim, idx) => {
-            output += `- "${claim}": ${data.claim_scores[idx].toFixed(2)}\n`;
+            const score = data.claim_scores[idx].toFixed(2);
+            const verdict = data.hf_verdicts[idx] || "N/A";
+            output += `- "${claim}": Score = ${score}, HF Verdict = ${verdict}\n`;
         });
 
-        output += "\n📚 Top Evidence:\n";
-        data.evidence.forEach((ev, idx) => {
-            output += `- (${data.evidence_scores[idx].toFixed(2)}) ${ev}\n`;
+        output += "\nTop Evidence:\n";
+        data.top_evidence.forEach((ev, idx) => {
+            const score = data.top_scores[idx].toFixed(2);
+            output += `- (${score}) ${ev}\n`;
         });
 
         document.getElementById("result").innerText = output;
