@@ -119,7 +119,7 @@ def retrieve_and_verify_batch(question, llm_answer, top_k=20, batch_size=5):
     hf_verdicts = verify_claims_hf_batch(claims, evidence_texts, batch_size=batch_size)
 
     # Final confidence: strongest similarity claim
-    final_confidence = float(max(claim_confidences))
+    final_confidence = float(np.mean(claim_confidences))
 
     # Rank evidence by similarity to full answer
     _, similarities = compute_similarity(llm_answer, evidence_texts)

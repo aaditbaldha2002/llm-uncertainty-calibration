@@ -2,8 +2,8 @@
 
 This project allows users to **evaluate LLM-generated answers** for potential hallucinations. Users can enter a question and paste an LLM answer, and the system provides:
 
-- A **hallucination confidence score** (0–1)  
-- **Top evidence** supporting the answer  
+- A **hallucination confidence score** (0–1)
+- **Top evidence** supporting the answer
 - Factuality interpretation (`Likely factual`, `Partially supported`, `Potential hallucination`)
 
 The system is implemented as a **Python backend** with a **Chrome Extension frontend**.
@@ -13,9 +13,9 @@ The system is implemented as a **Python backend** with a **Chrome Extension fron
 ## 🔹 Features
 
 - RAG-based evidence retrieval with FAISS
-- Sentence embeddings using **`all-MiniLM-L6-v2`**
-- Cosine similarity-based hallucination scoring
-- Chrome Extension interface for seamless user interaction
+- Sentence embeddings using `all-MiniLM-L6-v2`
+- Two-stage verification: cosine similarity scoring + LLM-based claim verification
+- Chrome Extension interface for seamless browser-based interaction
 
 ---
 
@@ -46,35 +46,106 @@ conda activate llm-hallucination-calibration
 pip install -r requirements.txt
 ```
 
-### 4. Prepare the knowledge base
-- Ensure you have generated `kb_index.faiss` and `kb_texts.pkl` files
-- These are required for evidence retrieval
+### 4. Build the knowledge base
 
-### 5. Run the python backend
+Before running the backend, you need to generate the FAISS index and knowledge base files from your dataset.
+
+**Prepare your data**
+
+Place your knowledge base CSV at `data/knowledge_base.csv`. The file must contain a `text` column with one passage or fact per row.
+
+Supported datasets (included in `datasets/`):
+- **TruthfulQA** — factual Q&A pairs for hallucination benchmarking
+- **HotpotQA** — multi-hop reasoning passages
+- **SQuAD** — reading comprehension passages
+
+To use one of the included datasets:
+```bash
+cp datasets/truthfulqa_processed.csv data/knowledge_base.csv
+```
+
+Expected CSV format:
+```
+text
+"The Eiffel Tower is located in Paris, France."
+"Water boils at 100 degrees Celsius at sea level."
+```
+
+**Run the index builder**
+```bash
+python build_kb.py
+```
+
+This script will:
+- Load all passages from `data/knowledge_base.csv`
+- Generate sentence embeddings using `all-MiniLM-L6-v2`
+- Normalize embeddings for cosine similarity via inner product
+- Build and save a FAISS `IndexFlatIP` index
+
+Output files saved to `vector_db/`:
+
+| File | Description |
+|---|---|
+| `kb_index.faiss` | FAISS index for fast nearest-neighbor retrieval |
+| `kb_texts.pkl` | Pickled DataFrame mapping index positions to original text |
+
+After running you should see:
+```
+Batches: 100%|████████████| 120/120 [00:14<00:00]
+FAISS index created with 3847 entries.
+```
+
+> ⚠️ These files are required for the API server to start. If they are missing, the server will throw a `RuntimeError` on startup.
+
+### 5. Run the backend
+```bash
+python api_server.py
+```
+
+The API will be available at `http://127.0.0.1:8000`. To test via console instead:
 ```bash
 python test_engine.py
 ```
-- This launches a console interface for testing
-- Enter a question and paste an LLM answer to see confidence scores and top evidence
 
-## Load the Chrome Extension
+### 6. Load the Chrome Extension
+
 1. Open Chrome and go to `chrome://extensions/`
-2. Enable Developer Mode (top right)
-3. Click Load unpacked
-4. Select the folder chrome_extension in the project repository.
+2. Enable **Developer Mode** (top right toggle)
+3. Click **Load unpacked**
+4. Select the `chrome_extension/` folder from the repository
 5. Pin the extension for easy access
 
-Now you can click the extesion icon, input a question and LLM answer and see confidence scores + top evidence in real-time
+Click the extension icon, enter a question and an LLM-generated answer, and see confidence scores and top supporting evidence in real time.
 
-## Project Structure
+---
+
+## 📁 Project Structure
+```
 llm-hallucination-calibration/
-├─ hallucination_engine.py   # Core scoring & retrieval logic
-├─ test_engine.py           # Console testing interface
-├─ kb_index.faiss           # FAISS index of knowledge base
-├─ kb_texts.pkl             # Pickled KB texts
-├─ chrome_extension/        # Chrome Extension frontend
-│   ├─ manifest.json
-│   ├─ popup.html
-│   └─ popup.js
-├─ datasets/                # Original datasets (TruthfulQA, HotpotQA, SQuAD, etc.)
-└─ README.md
+├── hallucination_engine.py   # Core scoring & retrieval logic
+├── api_server.py             # FastAPI backend
+├── build_kb.py               # FAISS index builder
+├── test_engine.py            # Console testing interface
+├── data/
+│   └── knowledge_base.csv    # Input data for index (user-provided)
+├── vector_db/
+│   ├── kb_index.faiss        # Generated FAISS index (gitignored)
+│   └── kb_texts.pkl          # Generated KB texts (gitignored)
+├── chrome_extension/
+│   ├── manifest.json
+│   ├── popup.html
+│   └── popup.js
+├── datasets/                 # Source datasets (TruthfulQA, HotpotQA, SQuAD)
+├── environment.yml
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 📝 Notes
+
+- Larger knowledge bases may take several minutes to encode on CPU
+- Re-run `build_kb.py` any time you update `knowledge_base.csv` — the index does not auto-update
+- `vector_db/` is gitignored by default — each collaborator should generate their own index locally
+- Set your HuggingFace API token as an environment variable before running: `export HF_API_TOKEN=your_token_here`

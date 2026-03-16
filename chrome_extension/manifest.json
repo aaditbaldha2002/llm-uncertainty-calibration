@@ -5,15 +5,18 @@
   "description": "LLM Hallucination Checker - Evaluate the reliability of AI-generated answers.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "16X16.jpg",
       "48": "48X48.jpg",
       "128": "128X128.jpg"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "icons": {
     "16": "16X16.jpg",
