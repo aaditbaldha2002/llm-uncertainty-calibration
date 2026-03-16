@@ -4,8 +4,16 @@ chrome.action.onClicked.addListener((tab) => {
         alert("TruthLens cannot run on internal Chrome pages.");
         return;
     }
+
+    // Prevent duplicate injection if container already exists
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        files: ["content.js"]
+        func: () => document.getElementById("truthlens-container") !== null
+    }, (results) => {
+        if (results && results[0].result) return;
+        chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ["content.js"]
+        });
     });
 });

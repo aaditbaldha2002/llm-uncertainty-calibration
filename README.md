@@ -149,3 +149,35 @@ llm-hallucination-calibration/
 - Re-run `build_kb.py` any time you update `knowledge_base.csv` — the index does not auto-update
 - `vector_db/` is gitignored by default — each collaborator should generate their own index locally
 - Set your HuggingFace API token as an environment variable before running: `export HF_API_TOKEN=your_token_here`
+
+## 🔭 Limitations & Future Work
+
+- Cosine similarity captures semantic relatedness but not
+  factual contradiction — NLI-based verification would improve
+  precision on subtle hallucinations
+- Current KB is static — a production system would need
+  real-time retrieval from live knowledge sources
+- **Web Search RAG Agent (planned):** When hallucination is 
+  detected (confidence score below threshold), automatically 
+  trigger a web search agent to retrieve live, cited sources 
+  that either correct or confirm the claim — turning the system 
+  from a passive detector into an active fact-correction tool
+- Chrome Extension currently requires a local backend — 
+  cloud deployment via AWS Lambda would enable public access
+  without local setup
+- Evaluation currently limited to TruthfulQA — broader 
+  benchmarking across FEVER and HaluEval datasets planned
+```
+
+**Why this specific improvement is smart to mention:**
+
+It shows you're thinking about the full user experience loop, not just the ML pipeline. The natural question after "this answer is hallucinated" is always "well what IS the correct answer?" — and you've already identified that gap and have a concrete architectural solution for it.
+
+**If you ever actually implement it**, the technical approach would be:
+```
+Low confidence score detected
+→ Extract the specific flagged claim
+→ Pass claim to a search agent (SerpAPI / Tavily / DuckDuckGo API)
+→ Retrieve top 3 web results
+→ Run those results through your existing FAISS + similarity pipeline
+→ Return corrected answer with cited sources back to Chrome Extension
