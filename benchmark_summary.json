@@ -1,0 +1,11 @@
+{
+  "dataset": "TruthfulQA",
+  "sample_size": 100,
+  "confidence_threshold": 0.8,
+  "factual_accuracy": 88.0,
+  "hallucination_detection_rate": 61.0,
+  "overall_accuracy": 50.0,
+  "avg_confidence_factual": 0.8921,
+  "avg_confidence_hallucination": 0.7363,
+  "separation_gap": 0.1558
+}

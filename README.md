@@ -150,34 +150,82 @@ llm-hallucination-calibration/
 - `vector_db/` is gitignored by default — each collaborator should generate their own index locally
 - Set your HuggingFace API token as an environment variable before running: `export HF_API_TOKEN=your_token_here`
 
-## 🔭 Limitations & Future Work
+## ⚙️ How It Works
 
-- Cosine similarity captures semantic relatedness but not
-  factual contradiction — NLI-based verification would improve
-  precision on subtle hallucinations
-- Current KB is static — a production system would need
-  real-time retrieval from live knowledge sources
-- **Web Search RAG Agent (planned):** When hallucination is 
-  detected (confidence score below threshold), automatically 
-  trigger a web search agent to retrieve live, cited sources 
-  that either correct or confirm the claim — turning the system 
-  from a passive detector into an active fact-correction tool
-- Chrome Extension currently requires a local backend — 
-  cloud deployment via AWS Lambda would enable public access
-  without local setup
-- Evaluation currently limited to TruthfulQA — broader 
-  benchmarking across FEVER and HaluEval datasets planned
+The system uses a **two-stage pipeline** to evaluate LLM-generated answers for potential hallucinations:
+
+**Stage 1 — Semantic Similarity Scoring**
+Each claim in the LLM answer is split into individual sentences and encoded into vector embeddings using `all-MiniLM-L6-v2`. These embeddings are compared against the FAISS-indexed knowledge base using cosine similarity, producing a per-claim confidence score.
+
+**Stage 2 — LLM-Based Claim Verification**
+The top retrieved evidence passages are passed alongside the claims to a Llama 3 model via the HuggingFace Inference API. The model returns a structured verdict (`true`, `false`, or `unsupported`) with reasoning for each claim. Both stages are combined into a final weighted confidence score.
+
+---
+
+## ✅ What It Detects Well
+
+The system is most reliable at flagging two specific failure modes:
+
+- **Off-topic fabrications** — answers that use correct-sounding language but reference concepts, events, or entities completely unrelated to the question (e.g. describing photosynthesis as a financial process)
+- **Direct factual mismatches** — answers where key facts directly contradict well-represented passages in the knowledge base
+
+**Example — high confidence (factual answer):**
+```
+Q: What is the capital of France?
+A: Paris is the capital of France.
+→ Confidence: ~0.85 | Verdict: Likely Factual ✅
 ```
 
-**Why this specific improvement is smart to mention:**
-
-It shows you're thinking about the full user experience loop, not just the ML pipeline. The natural question after "this answer is hallucinated" is always "well what IS the correct answer?" — and you've already identified that gap and have a concrete architectural solution for it.
-
-**If you ever actually implement it**, the technical approach would be:
+**Example — low confidence (off-topic fabrication):**
 ```
-Low confidence score detected
-→ Extract the specific flagged claim
-→ Pass claim to a search agent (SerpAPI / Tavily / DuckDuckGo API)
-→ Retrieve top 3 web results
-→ Run those results through your existing FAISS + similarity pipeline
-→ Return corrected answer with cited sources back to Chrome Extension
+Q: What is photosynthesis?
+A: Photosynthesis is a financial process where banks convert 
+   currency reserves into liquid assets using quantum algorithms 
+   developed by MIT in 2003.
+→ Confidence: ~0.21 | Verdict: Potential Hallucination 🚨
+```
+
+---
+
+## ⚠️ Known Limitations
+
+This system is a research prototype. Understanding its constraints is important for correct interpretation of results.
+
+**Semantic similarity ≠ factual accuracy**
+The embedding model (`all-MiniLM-L6-v2`) measures how semantically related two passages are — not whether a claim is factually correct. A plausible but wrong answer about the correct topic (e.g. "The telephone was invented by Thomas Edison") may score similarly to the correct answer because the surrounding vocabulary and topic are the same. The model has no understanding of factual truth.
+
+**Static knowledge base**
+The system can only verify claims against its pre-built FAISS index. Facts outside the indexed datasets (TruthfulQA, HotpotQA, SQuAD) will return low confidence regardless of accuracy.
+
+**Claim splitting is sentence-based**
+Complex multi-clause sentences may not split cleanly into individual verifiable claims, which can affect per-claim scoring accuracy.
+
+---
+
+## 🔭 Future Work
+
+- **NLI-based verification** — Replace or augment cosine similarity with a Natural Language Inference model (e.g. DeBERTa fine-tuned on MNLI) trained specifically on contradiction detection, improving precision on plausible but factually incorrect claims
+- **Web Search RAG Agent** — When hallucination is detected (confidence below threshold), automatically trigger a web search agent (e.g. Tavily API) to retrieve live cited sources that correct the flagged claim — turning the system from a passive detector into an active fact-correction tool
+- **Cloud deployment** — Deploy backend to AWS Lambda or GCP Cloud Run to remove the local setup requirement and enable public access via the Chrome Extension
+- **Broader benchmarking** — Evaluate against FEVER and HaluEval datasets in addition to TruthfulQA to measure performance across diverse hallucination types
+
+## 🧪 Evaluation
+
+Formal benchmarking requires a held-out evaluation set separate from 
+the system's knowledge base. Since the current KB is built from 
+TruthfulQA, HotpotQA, and SQuAD, quantitative evaluation against 
+these same datasets would produce artificially inflated results due 
+to data overlap.
+
+Manual testing shows the system reliably distinguishes between:
+- **Off-topic fabrications** — answers using unrelated concepts 
+  score consistently low (< 0.4)
+- **Direct factual matches** — answers closely matching KB content 
+  score consistently high (> 0.85)
+
+The system struggles with **plausible but incorrect answers** on the 
+correct topic — a known limitation of embedding-based similarity 
+approaches documented in the Limitations section.
+
+Rigorous evaluation against a fully held-out dataset (FEVER or 
+HaluEval) is planned as part of future work.
