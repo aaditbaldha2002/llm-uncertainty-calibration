@@ -28,20 +28,16 @@ document.getElementById("check").onclick = async function() {
 
         const data = await response.json();
 
-        // Build output
         let output = `Final Confidence Score: ${data.confidence.toFixed(2)}\n\n`;
 
-        output += "Per-Claim Scores & HF Verdicts:\n";
-        data.claims.forEach((claim, idx) => {
-            const score = data.claim_scores[idx].toFixed(2);
-            const verdict = data.hf_verdicts[idx] || "N/A";
-            output += `- "${claim}": Score = ${score}, HF Verdict = ${verdict}\n`;
+        output += "Claim Similarity Scores:\n";
+        data.claim_scores.forEach((score, idx) => {
+            output += `Claim ${idx + 1}: ${score.toFixed(2)}\n`;
         });
 
-        output += "\nTop Evidence:\n";
-        data.top_evidence.forEach((ev, idx) => {
-            const score = data.top_scores[idx].toFixed(2);
-            output += `- (${score}) ${ev}\n`;
+        output += "\nTop Evidence Similarity Scores:\n";
+        data.top_scores.forEach((score, idx) => {
+            output += `Evidence ${idx + 1}: ${score.toFixed(2)}\n`;
         });
 
         document.getElementById("result").innerText = output;

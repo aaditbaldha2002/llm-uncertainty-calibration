@@ -34,10 +34,7 @@ def evaluate(req: QARequest):
 
     return {
         "confidence": final_confidence,
-        "claims": results["claims"],
         "claim_scores": claim_scores,
-        "hf_verdicts": results["hf_verdicts"],  # Hugging Face LLM verdicts
-        "top_evidence": results["top_evidence"][:3],  # top 3 evidence snippets
         "top_scores": top_scores[:3],
     }
 

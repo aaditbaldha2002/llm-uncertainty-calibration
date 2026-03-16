@@ -54,7 +54,7 @@ def compute_similarity(text, evidence_texts):
     similarities = np.dot(evidence_embeddings, text_embedding.T).flatten()
     max_similarity = np.max(similarities)
     mean_similarity = np.mean(similarities)
-    confidence = float(0.7 * max_similarity + 0.3 * mean_similarity)
+    confidence = float(0.9 * max_similarity + 0.1 * mean_similarity)
 
     return confidence, similarities
 
@@ -118,8 +118,8 @@ def retrieve_and_verify_batch(question, llm_answer, top_k=20, batch_size=5):
     # Hugging Face batch verification
     hf_verdicts = verify_claims_hf_batch(claims, evidence_texts, batch_size=batch_size)
 
-    # Final confidence: weakest similarity claim
-    final_confidence = float(min(claim_confidences))
+    # Final confidence: strongest similarity claim
+    final_confidence = float(max(claim_confidences))
 
     # Rank evidence by similarity to full answer
     _, similarities = compute_similarity(llm_answer, evidence_texts)
