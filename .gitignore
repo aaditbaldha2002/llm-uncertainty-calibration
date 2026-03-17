@@ -3,3 +3,4 @@ vector_db/*
 *.faiss
 *.pkl
 .env
+Demo/*
