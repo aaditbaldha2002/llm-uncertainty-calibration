@@ -9,6 +9,8 @@ This project allows users to **evaluate LLM-generated answers** for potential ha
 The system is implemented as a **Python backend** with a **Chrome Extension frontend**.
 
 ---
+🌐 Demo & Write-up
+📝 LinkedIn Post with Demo → https://www.linkedin.com/posts/aaditharshalbaldha_machinelearning-nlp-llm-activity-7439475072890736640-80XL?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEYe8K4BbgTA5u7uZr3n2SBttJuthnkgSXg
 
 ## 🔹 Features
 
